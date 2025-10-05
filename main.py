@@ -8,8 +8,13 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import httpx
 
+
+from keep_alive import keep_alive
+
 load_dotenv()
 token = os.getenv("DISCORD_TOKEN")
+
+keep_alive()
 
 logging.basicConfig(level=logging.INFO)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
