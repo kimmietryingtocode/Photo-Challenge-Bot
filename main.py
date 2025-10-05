@@ -7,14 +7,28 @@ from typing import TypedDict, Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import httpx
-
+import uvicorn
+from threading import Thread
+import time
 
 from keep_alive import keep_alive
+from api import app
 
 load_dotenv()
 token = os.getenv("DISCORD_TOKEN")
 
+# Start the FastAPI server in a separate thread
+def run_api():
+    port = int(os.environ.get('API_PORT', 8001))  # Use different port from keep_alive
+    uvicorn.run(app, host='0.0.0.0', port=port, log_level='error')
+
+# Start both servers
 keep_alive()
+api_thread = Thread(target=run_api, daemon=True)
+api_thread.start()
+
+# Wait a moment for the API server to start
+time.sleep(2)
 
 logging.basicConfig(level=logging.INFO)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
@@ -33,7 +47,7 @@ class Prompt(TypedDict, total=False):
     time_hint: str
     tags: list[str]
 
-BASE = "http://localhost:8000"
+BASE = f"http://localhost:{os.environ.get('API_PORT', 8001)}"
 
 async def get_prompt_by_week(week: int) -> Optional[Prompt]:
     # clamp if your calendar rule can yield 53
